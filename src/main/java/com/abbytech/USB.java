@@ -3,6 +3,8 @@ package com.abbytech;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.usb4java.*;
+import uk.co.bithatch.linuxio.EventCode;
+import uk.co.bithatch.linuxio.InputDevice;
 
 
 import java.nio.ByteBuffer;
@@ -17,72 +19,155 @@ public class USB {
 
     private static final int HID_DATA_LENGTH = 48;
 
-    private static final Map<String, Key> keyCodeMap = new HashMap<>();
+    private static final Map<String, EventCode> keyCodeMap = new HashMap<>();
     private static final int initialCapacity = 15;
     private static DeviceHandle deviceHandle;
 
 
-    enum Key {
-        W, A, S, D, FN, HOME, UNMAPPED,NO_KEY
-    }
-
     static {
-        keyCodeMap.put("12", Key.W);
-        keyCodeMap.put("1f", Key.A);
-        keyCodeMap.put("20", Key.S);
-        keyCodeMap.put("21", Key.D);
-        keyCodeMap.put("3b", Key.FN);
-        keyCodeMap.put("50", Key.HOME);
-        keyCodeMap.put("00",Key.NO_KEY);
+        keyCodeMap.put("01", EventCode.KEY_GRAVE);
+        //horizontal numbers
+        keyCodeMap.put("02", EventCode.KEY_1);
+        keyCodeMap.put("03", EventCode.KEY_2);
+        keyCodeMap.put("04", EventCode.KEY_3);
+        keyCodeMap.put("05", EventCode.KEY_4);
+        keyCodeMap.put("06", EventCode.KEY_5);
+        keyCodeMap.put("07", EventCode.KEY_6);
+        keyCodeMap.put("08", EventCode.KEY_7);
+        keyCodeMap.put("09", EventCode.KEY_8);
+        keyCodeMap.put("0a", EventCode.KEY_9);
+        keyCodeMap.put("0b", EventCode.KEY_0);
+        keyCodeMap.put("0c", EventCode.KEY_MINUS);
+        keyCodeMap.put("0d", EventCode.KEY_EQUAL);
+        keyCodeMap.put("0e", EventCode.KEY_RESERVED);
+        keyCodeMap.put("0f", EventCode.KEY_BACKSPACE);
+        keyCodeMap.put("10", EventCode.KEY_TAB);
+        keyCodeMap.put("11", EventCode.KEY_Q);
+        keyCodeMap.put("12", EventCode.KEY_W);
+        keyCodeMap.put("13", EventCode.KEY_E);
+        keyCodeMap.put("14", EventCode.KEY_R);
+        keyCodeMap.put("15", EventCode.KEY_T);
+        keyCodeMap.put("16", EventCode.KEY_Y);
+        keyCodeMap.put("17", EventCode.KEY_U);
+        keyCodeMap.put("18", EventCode.KEY_I);
+        keyCodeMap.put("19", EventCode.KEY_O);
+        keyCodeMap.put("1a", EventCode.KEY_P);
+        keyCodeMap.put("1b", EventCode.KEY_LEFTBRACE);
+        keyCodeMap.put("1c", EventCode.KEY_RIGHTBRACE);
+        keyCodeMap.put("1d", EventCode.KEY_BACKSLASH);
+        keyCodeMap.put("1e", EventCode.KEY_CAPSLOCK);
+        keyCodeMap.put("1f", EventCode.KEY_A);
+        keyCodeMap.put("20", EventCode.KEY_S);
+        keyCodeMap.put("21", EventCode.KEY_D);
+        keyCodeMap.put("22", EventCode.KEY_F);
+        keyCodeMap.put("23", EventCode.KEY_G);
+        keyCodeMap.put("24", EventCode.KEY_H);
+        keyCodeMap.put("25", EventCode.KEY_J);
+        keyCodeMap.put("26", EventCode.KEY_K);
+        keyCodeMap.put("27", EventCode.KEY_L);
+        keyCodeMap.put("28", EventCode.KEY_SEMICOLON);
+        keyCodeMap.put("29", EventCode.KEY_APOSTROPHE);
+        keyCodeMap.put("2a", EventCode.KEY_RESERVED);
+        keyCodeMap.put("2b", EventCode.KEY_ENTER);
+        keyCodeMap.put("2c", EventCode.KEY_LEFTSHIFT);
+        keyCodeMap.put("2e", EventCode.KEY_Z);
+        keyCodeMap.put("2f", EventCode.KEY_X);
+        keyCodeMap.put("30", EventCode.KEY_C);
+        keyCodeMap.put("31", EventCode.KEY_V);
+        keyCodeMap.put("32", EventCode.KEY_B);
+        keyCodeMap.put("33", EventCode.KEY_N);
+        keyCodeMap.put("34", EventCode.KEY_M);
+        keyCodeMap.put("35", EventCode.KEY_COMMA);
+        keyCodeMap.put("36", EventCode.KEY_DOT);
+        keyCodeMap.put("37", EventCode.KEY_SLASH);
+        keyCodeMap.put("38", EventCode.KEY_RESERVED);
+        keyCodeMap.put("39", EventCode.KEY_RIGHTSHIFT);
+        keyCodeMap.put("3a", EventCode.KEY_LEFTCTRL);
+        keyCodeMap.put("3b", EventCode.KEY_FN);
+        keyCodeMap.put("3c", EventCode.KEY_LEFTALT);
+        keyCodeMap.put("3d", EventCode.KEY_SPACE);
+        keyCodeMap.put("3e", EventCode.KEY_RIGHTALT);
+        keyCodeMap.put("40", EventCode.KEY_RIGHTCTRL);
+
+        //keypad/numpad begin
+        keyCodeMap.put("5a", EventCode.KEY_NUMLOCK);
+        keyCodeMap.put("5b", EventCode.KEY_KP7);
+        keyCodeMap.put("5c", EventCode.KEY_KP4);
+        keyCodeMap.put("5d", EventCode.KEY_KP1);
+        keyCodeMap.put("5f",EventCode.KEY_KPSLASH);
+        keyCodeMap.put("60", EventCode.KEY_KP8);
+        keyCodeMap.put("61", EventCode.KEY_KP5);
+        keyCodeMap.put("62", EventCode.KEY_KP2);
+        keyCodeMap.put("63", EventCode.KEY_KP0);
+        keyCodeMap.put("64",EventCode.KEY_KPASTERISK);
+        keyCodeMap.put("65", EventCode.KEY_KP9);
+        keyCodeMap.put("66", EventCode.KEY_KP6);
+        keyCodeMap.put("67", EventCode.KEY_KP3);
+        keyCodeMap.put("68", EventCode.KEY_KPDOT);
+        keyCodeMap.put("69",EventCode.KEY_MINUS);
+        keyCodeMap.put("6a",EventCode.KEY_KPPLUS);
+        keyCodeMap.put("6c",EventCode.KEY_KPENTER);
+        keyCodeMap.put("6e", EventCode.KEY_ESC);
+        //keypad/numpad end
+
+        keyCodeMap.put("4f", EventCode.KEY_LEFT);
+        keyCodeMap.put("53", EventCode.KEY_UP);
+        keyCodeMap.put("54", EventCode.KEY_DOWN);
+        keyCodeMap.put("59", EventCode.KEY_RIGHT);
+        keyCodeMap.put("4b", EventCode.KEY_INSERT);
+        keyCodeMap.put("4c", EventCode.KEY_DELETE);
+        keyCodeMap.put("50", EventCode.KEY_HOME);
+        keyCodeMap.put("51", EventCode.KEY_END);
+        keyCodeMap.put("55", EventCode.KEY_PAGEUP);
+        keyCodeMap.put("56", EventCode.KEY_PAGEDOWN);
+        keyCodeMap.put("81", EventCode.KEY_CONTEXT_MENU);
+        keyCodeMap.put("70", EventCode.KEY_F1);
+        keyCodeMap.put("71", EventCode.KEY_F2);
+        keyCodeMap.put("72", EventCode.KEY_F3);
+        keyCodeMap.put("73", EventCode.KEY_F4);
+        keyCodeMap.put("74", EventCode.KEY_F5);
+        keyCodeMap.put("75", EventCode.KEY_F6);
+        keyCodeMap.put("76", EventCode.KEY_F7);
+        keyCodeMap.put("77", EventCode.KEY_F8);
+        keyCodeMap.put("78", EventCode.KEY_F9);
+        keyCodeMap.put("79", EventCode.KEY_F10);
+        keyCodeMap.put("7a", EventCode.KEY_F11);
+        keyCodeMap.put("7b", EventCode.KEY_F12);
+        keyCodeMap.put("7c", EventCode.KEY_PRINT);
+        keyCodeMap.put("7d", EventCode.KEY_SCROLLLOCK);
+        keyCodeMap.put("7e", EventCode.KEY_PAUSE);
+        keyCodeMap.put("7f", EventCode.KEY_LEFTMETA);
+        keyCodeMap.put("00", EventCode.KEY_RESERVED);
+
+        keyCodeMap.put("52",EventCode.KEY_MEDIA);
     }
 
-    static class EventKey {
-        private final Key key;
-        private final Integer value;
+    static Collection<EventCode> getCapabilities() {
+        return keyCodeMap.values();
+    }
 
-        public EventKey(Key key, Integer value) {
-            this.key = key;
-            this.value = value;
+
+    static class CompositeEvent {
+        private final List<InputDevice.Event> events;
+
+        CompositeEvent(List<InputDevice.Event> events) {
+            this.events = events;
         }
 
-        public Key getKey() {
-            return key;
-        }
-
-        public Integer getValue() {
-            return value;
+        public List<InputDevice.Event> getEvents() {
+            return events;
         }
 
         @Override
         public String toString() {
             return "Event{" +
-                    "key='" + key + '\'' +
-                    ", value=" + value +
-                    '}';
-        }
-    }
-
-    static class Event {
-        private final List<EventKey> eventKeys;
-
-        Event(List<EventKey> eventKeys) {
-            this.eventKeys = eventKeys;
-        }
-
-        public List<EventKey> getEventParts() {
-            return eventKeys;
-        }
-
-        @Override
-        public String toString() {
-            return "Event{" +
-                    "eventKeys=" + eventKeys +
+                    "eventKeys=" + events +
                     '}';
         }
     }
 
     interface EventListener {
-        void onEvent(Event event);
+        void onEvent(CompositeEvent event);
     }
 
     public static void listen(EventListener listener) throws DecoderException {
@@ -93,44 +178,56 @@ public class USB {
         sendCommand(deviceHandle, Constants.setDriverDeviceMode);
         System.out.println("waiting for input");
         while (true) {
-            Event event = readEvent();
-            List<EventKey> eventParts = event.getEventParts();
-            if (eventParts.size() == 2) {
-                USB.EventKey eventKey1 = eventParts.get(0);
-                USB.EventKey eventKey2 = eventParts.get(1);
-                USB.Key key1 = eventKey1.getKey();
-                USB.Key key2 = eventKey2.getKey();
-                Integer value1 = eventKey1.getValue();
-                Integer value2 = eventKey2.getValue();
-
-                if (key1.equals(USB.Key.FN) && key2.equals(USB.Key.HOME)) {
-                    if (value1 > Short.MAX_VALUE && value2 > Short.MAX_VALUE) {
-                        System.out.println("terminating");
-                        break;
-                    }
-                }
-            }else{
-                listener.onEvent(event);
-                System.out.println(event);
+            CompositeEvent compositeEvent = readEvent();
+            if (shouldTerminate(compositeEvent)) {
+                break;
+            } else {
+                listener.onEvent(compositeEvent);
             }
         }
     }
 
-    private static Event readEvent() {
+    private static boolean shouldTerminate(CompositeEvent compositeEvent) {
+        List<InputDevice.Event> events = compositeEvent.getEvents();
+        if (events.size() == 2) {
+            InputDevice.Event event = events.get(0);
+            InputDevice.Event event1 = events.get(1);
+            EventCode eventCode = event.getCode();
+            EventCode eventCode1 = event1.getCode();
+            int value = event.getValue();
+            int value1 = event1.getValue();
+
+            if (eventCode.equals(EventCode.KEY_FN) && eventCode1.equals(EventCode.KEY_HOME)) {
+                if (value > Short.MAX_VALUE && value1 > Short.MAX_VALUE) {
+                    System.out.println("terminating");
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private static CompositeEvent readEvent() {
         ByteBuffer byteBuffer = ByteBuffer.allocateDirect(HID_DATA_LENGTH);
         IntBuffer transferred = IntBuffer.allocate(1);
         int result = LibUsb.interruptTransfer(deviceHandle, ENDPOINT_IN_ANALOG, byteBuffer, transferred, 0);
         String hidData = new String(Hex.encodeHex(byteBuffer));
-        List<EventKey> eventKeys = decode(hidData).stream().map(hidPart -> {
-            String keyCode = hidPart.getKeyCode();
-            Integer value = hidPart.getValue();
-            Key key = Optional.ofNullable(keyCodeMap.get(keyCode)).orElse(Key.UNMAPPED);
-            return new EventKey(key, value);
-        }).filter(eventKey -> !(eventKey.getKey().equals(Key.NO_KEY) && eventKey.getValue()==0))
+        List<InputDevice.Event> eventKeys = decode(hidData).stream().map(hidPart -> {
+                    String keyCode = hidPart.getKeyCode();
+                    Integer value = hidPart.getValue();
+//                    if (!keyCode.equals("00")) {
+//                        System.out.printf("key:%s,value:%d%n", keyCode, value);
+//                    }
+                    EventCode eventCode = Optional.ofNullable(keyCodeMap.get(keyCode)).orElse(EventCode.KEY_RESERVED);
+                    if (eventCode.equals(EventCode.KEY_RESERVED) && !keyCode.equals("00")) {
+                        System.out.printf("UNMAPPED:%s%n", keyCode);
+                    }
+                    return new InputDevice.Event(eventCode, value);
+                }).filter(eventKey -> !(eventKey.getCode().equals(EventCode.KEY_RESERVED) && eventKey.getValue() == 0))
                 .collect(Collectors.toList());
 
         checkResult(result, false);
-        return new Event(eventKeys);
+        return new CompositeEvent(eventKeys);
     }
 
     private static List<HidPart> decode(String hexString) {
