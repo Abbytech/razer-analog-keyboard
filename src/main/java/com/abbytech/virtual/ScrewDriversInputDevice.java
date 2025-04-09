@@ -27,6 +27,10 @@ public class ScrewDriversInputDevice {
         input.add(EventCode.KEY_RIGHT);
     }
 
+    public boolean isOpen(){
+        return virtualInputDevice.isOpen();
+    }
+
     public ScrewDriversInputDevice(InputDevice virtualInputDevice) throws IOException {
         this.virtualInputDevice = virtualInputDevice;
         gamepadCapabilities();

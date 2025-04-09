@@ -2,6 +2,7 @@ package com.abbytech;
 
 import com.abbytech.protocol.Constants;
 import com.abbytech.hid.Keyboard;
+import com.abbytech.protocol.USB;
 import com.abbytech.virtual.ScrewDriversInputDevice;
 import org.apache.commons.codec.DecoderException;
 import uk.co.bithatch.linuxio.EventCode;
@@ -10,6 +11,7 @@ import uk.co.bithatch.linuxio.InputDevice;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class Main {
@@ -19,14 +21,66 @@ public class Main {
 
     public static void main(String[] args) throws DecoderException, IOException {
         Runtime.getRuntime().addShutdownHook(new Thread(Main::shutdown));
-
-        virtualKeyboard = new InputDevice("Razer Keyboard", Constants.VENDOR_RAZER, Constants.HUNTSMAN_V3_PRO);
-        virtualKeyboard.addCapability(Keyboard.getCapabilities().toArray(new EventCode[0]));
-        virtualKeyboard.open();
-
+        Keyboard keyboard = new Keyboard(new USB());
+        virtualKeyboard = createVirtualKeyboard(keyboard);
         InputDevice gamepad = new InputDevice("Razer WASD", (short) 0x1234, (short) 0x5678);
         mappingInputDevice = new ScrewDriversInputDevice(gamepad);
-        Keyboard.listen(Main::handleEvent);
+        keyboard.listen(Main::handleEvent);
+        virtualKeyboard.close();
+    }
+
+    private static boolean findPhysicalKeyboardAndWaitForEnableCombo(Keyboard keyboard) throws IOException {
+        Optional<InputDevice> inputDevice = getActualKeyboard();
+        if (inputDevice.isPresent()) {
+            InputDevice actualKeyboard = inputDevice.get();
+            actualKeyboard.open();
+            waitForEnableCombo(actualKeyboard);
+            virtualKeyboard = createVirtualKeyboard(keyboard);
+        } else {
+            System.err.println("original keyboard not found; exiting...");
+            return true;
+        }
+        return false;
+    }
+
+    private static InputDevice createVirtualKeyboard(Keyboard keyboard) throws IOException {
+        virtualKeyboard = new InputDevice("Razer Keyboard", Constants.VENDOR_RAZER, Constants.HUNTSMAN_V3_PRO);
+        virtualKeyboard.addCapability(keyboard.getCapabilities().toArray(new EventCode[0]));
+        virtualKeyboard.open();
+        return virtualKeyboard;
+    }
+
+    private static void waitForEnableCombo(InputDevice actualKeyboard) throws IOException {
+        System.out.println("waiting for enable command");
+        while (true) {
+            InputDevice.Event event = actualKeyboard.nextEvent();
+            if (event.getCode().equals(EventCode.KEY_FN) && event.getValue() == 1) {
+                InputDevice.Event event2 = actualKeyboard.nextEvent();
+                if (event2.getCode().equals(EventCode.KEY_HOME) && event.getValue() == 1) {
+                    System.out.println("got enable command");
+                    break;
+                }
+            }
+        }
+    }
+
+    private static Optional<InputDevice> getActualKeyboard() throws IOException {
+        List<InputDevice> devices = InputDevice.getAllKeyboardDevices().stream()
+                .filter(inputDevice -> inputDevice.getVendor() == Constants.VENDOR_RAZER && inputDevice.getProduct() == Constants.HUNTSMAN_V3_PRO)
+                .filter(inputDevice -> {
+                    System.out.println();
+                    return /*inputDevice.getCapabilities(EventCode.Type.EV_KEY).contains(EventCode.KEY_FN) && */inputDevice.getCapabilities(EventCode.Type.EV_KEY).contains(EventCode.KEY_HOME);
+                })
+                .collect(Collectors.toList());
+
+        if (devices.isEmpty()) {
+            return Optional.empty();
+        } else {
+            if (devices.size() > 1) {
+                System.err.println("found more than one physical keyboard" + devices);
+            }
+            return Optional.of(devices.get(1));
+        }
     }
 
     public static void handleEvent(List<InputDevice.Event> events) {
@@ -93,8 +147,10 @@ public class Main {
 
     private static void shutdown() {
         try {
-            mappingInputDevice.close();
-            virtualKeyboard.close();
+            if (mappingInputDevice.isOpen())
+                mappingInputDevice.close();
+            if (virtualKeyboard.isOpen())
+                virtualKeyboard.close();
         } catch (Exception e) {
             //ignored
             e.printStackTrace();

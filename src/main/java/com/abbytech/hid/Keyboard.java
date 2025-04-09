@@ -10,16 +10,23 @@ import java.util.Collection;
 import java.util.List;
 
 public class Keyboard {
-    public interface EventListener {
-        void onEvent(List<InputDevice.Event> event);
+    private final USB usb;
+
+    public Keyboard(USB usb) {
+        this.usb = usb;
     }
 
-    public static void listen(EventListener listener) throws DecoderException {
-        USB.openDevice();
+    public void listen(EventListener listener) throws DecoderException {
+        usb.openDevice();
         while (true) {
-            ByteBuffer byteBuffer = USB.readHIDData();
+            ByteBuffer byteBuffer = usb.readHIDData();
             List<InputDevice.Event> events = HIDDecoder.decode(byteBuffer);
             if (shouldTerminate(events)) {
+                try {
+                    usb.closeDevice();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
                 break;
             } else {
                 listener.onEvent(events);
@@ -27,7 +34,7 @@ public class Keyboard {
         }
     }
 
-    private static boolean shouldTerminate(List<InputDevice.Event> events) {
+    private boolean shouldTerminate(List<InputDevice.Event> events) {
         if (events.size() == 2) {
             InputDevice.Event event = events.get(0);
             InputDevice.Event event1 = events.get(1);
@@ -46,7 +53,11 @@ public class Keyboard {
         return false;
     }
 
-    public static Collection<EventCode> getCapabilities() {
+    public Collection<EventCode> getCapabilities() {
         return HIDDecoder.getCapabilities();
+    }
+
+    public interface EventListener {
+        void onEvent(List<InputDevice.Event> event);
     }
 }

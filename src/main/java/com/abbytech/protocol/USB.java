@@ -13,19 +13,15 @@ import java.util.stream.StreamSupport;
 import static com.abbytech.protocol.Constants.*;
 
 public class USB {
-    private static DeviceHandle deviceHandle;
-    private static final ByteBuffer commandByteBuffer = ByteBuffer.allocateDirect(COMMAND_LENGTH);
-    private static final ByteBuffer hidDataBuffer = ByteBuffer.allocateDirect(HID_DATA_LENGTH);
-    private static final IntBuffer hidInterruptResult = IntBuffer.allocate(1);
+    private final Thread hook = new Thread(this::shutdown);
+    private DeviceHandle deviceHandle;
+    private final ByteBuffer commandByteBuffer = ByteBuffer.allocateDirect(COMMAND_LENGTH);
+    private final ByteBuffer hidDataBuffer = ByteBuffer.allocateDirect(HID_DATA_LENGTH);
+    private final IntBuffer hidInterruptResult = IntBuffer.allocate(1);
+    private boolean deviceOpen = false;
 
-
-    public static void openDevice() throws DecoderException {
-        Runtime.getRuntime().addShutdownHook(new Thread(USB::shutdown));
+    static {
         init();
-        Device device = findDevice(VENDOR_RAZER, HUNTSMAN_V3_PRO).get(0);
-        deviceHandle = claimDevice(device);
-        sendCommand(deviceHandle, Constants.setDriverDeviceMode);
-        System.out.println("device opened");
     }
 
     private static void init() {
@@ -33,12 +29,30 @@ public class USB {
         if (result != LibUsb.SUCCESS) throw new LibUsbException("Unable to initialize libusb.", result);
     }
 
-    public static void closeDevice() throws DecoderException {
+    public void openDevice() throws DecoderException, LibUsbException {
+        if (deviceOpen) {
+            throw new IllegalStateException("device already open");
+        }
+        Runtime.getRuntime().addShutdownHook(hook);
+        Device device = findDevice(VENDOR_RAZER, HUNTSMAN_V3_PRO).get(0);
+        deviceHandle = claimDevice(device);
+        sendCommand(deviceHandle, Constants.setDriverDeviceMode);
+        deviceOpen = true;
+        System.out.println("device opened");
+    }
+
+    public void closeDevice() throws DecoderException, LibUsbException {
+        if (!deviceOpen) {
+            throw new IllegalStateException("device not open");
+        }
+        if (!Thread.currentThread().equals(hook)) {
+            Runtime.getRuntime().removeShutdownHook(hook);
+        }
         sendCommand(deviceHandle, Constants.setNormalDeviceMode);
         releaseDevice(deviceHandle);
     }
 
-    public static ByteBuffer readHIDData() {
+    public ByteBuffer readHIDData() {
         hidDataBuffer.clear();
         hidInterruptResult.clear();
         int result = LibUsb.interruptTransfer(deviceHandle, ENDPOINT_IN_ANALOG, hidDataBuffer, hidInterruptResult, 0);
@@ -47,7 +61,7 @@ public class USB {
     }
 
 
-    private static DeviceHandle claimDevice(Device device) {
+    private DeviceHandle claimDevice(Device device) {
         deviceHandle = openDevice(device);
         claimInterface(Constants.interfaceNumber);
         claimInterface(1);
@@ -55,26 +69,26 @@ public class USB {
         return deviceHandle;
     }
 
-    private static void claimInterface(int interfaceNumber) {
+    private void claimInterface(int interfaceNumber) {
         detachDriver(interfaceNumber);
         int result = LibUsb.claimInterface(deviceHandle, interfaceNumber);
         checkResult(result, true);
     }
 
-    private static void releaseDevice(DeviceHandle handle) {
+    private void releaseDevice(DeviceHandle handle) {
         releaseInterface(Constants.interfaceNumber);
         releaseInterface(1);
         releaseInterface(3);
         LibUsb.close(handle);
     }
 
-    private static void releaseInterface(int interfaceNumber) {
+    private void releaseInterface(int interfaceNumber) {
         int result = LibUsb.releaseInterface(deviceHandle, interfaceNumber);
         checkResult(result, false);
         attachDriver(interfaceNumber);
     }
 
-    private static void checkResult(int result, boolean shouldThrow) {
+    private void checkResult(int result, boolean shouldThrow) {
         if (result != LibUsb.SUCCESS) {
             if (shouldThrow) {
                 throw new LibUsbException(result);
@@ -86,7 +100,7 @@ public class USB {
         }
     }
 
-    private static List<Device> findDevice(short vendorId, short productId) {
+    private List<Device> findDevice(short vendorId, short productId) {
         // Read the USB device list
         DeviceList list = new DeviceList();
         int result = LibUsb.getDeviceList(null, list);
@@ -107,7 +121,7 @@ public class USB {
         return matchingDevices;
     }
 
-    public static void sendCommand(DeviceHandle handle, String mode) throws DecoderException {
+    public void sendCommand(DeviceHandle handle, String mode) throws DecoderException {
         commandByteBuffer.clear();
         byte[] setDeviceMode = Hex.decodeHex(mode);
         commandByteBuffer.put(setDeviceMode);
@@ -115,28 +129,28 @@ public class USB {
         checkResult(result, false);
     }
 
-    private static DeviceHandle openDevice(Device device) {
+    private DeviceHandle openDevice(Device device) {
         DeviceHandle handle = new DeviceHandle();
         int devResult = LibUsb.open(device, handle);
         if (devResult != LibUsb.SUCCESS) throw new LibUsbException("Unable to open USB device", devResult);
         return handle;
     }
 
-    public static void detachDriver(int interfaceNumber) {
+    public void detachDriver(int interfaceNumber) {
         int result = LibUsb.detachKernelDriver(deviceHandle, interfaceNumber);
         if (result != LibUsb.SUCCESS && result != LibUsb.ERROR_NOT_FOUND)
             throw new LibUsbException("Unable to detach kernel driver", result);
     }
 
-    private static void attachDriver(int interfaceNumber) {
+    private void attachDriver(int interfaceNumber) {
         int result = LibUsb.attachKernelDriver(deviceHandle, interfaceNumber);
         if (result != LibUsb.SUCCESS && result != LibUsb.ERROR_BUSY)
             throw new LibUsbException("Unable to re-attach kernel driver", result);
     }
 
-    private static void shutdown() {
+    private void shutdown() {
         try {
-            USB.closeDevice();
+            closeDevice();
         } catch (Exception e) {
             //ignored
             e.printStackTrace();
