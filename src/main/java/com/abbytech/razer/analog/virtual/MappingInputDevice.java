@@ -1,4 +1,4 @@
-package com.abbytech.virtual;
+package com.abbytech.razer.analog.virtual;
 
 import uk.co.bithatch.linuxio.EventCode;
 import uk.co.bithatch.linuxio.InputDevice;

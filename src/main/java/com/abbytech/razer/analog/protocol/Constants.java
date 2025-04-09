@@ -1,4 +1,4 @@
-package com.abbytech.protocol;
+package com.abbytech.razer.analog.protocol;
 
 import org.usb4java.LibUsb;
 

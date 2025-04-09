@@ -1,4 +1,4 @@
-package com.abbytech.hid;
+package com.abbytech.razer.analog.hid;
 
 import org.apache.commons.codec.binary.Hex;
 import uk.co.bithatch.linuxio.EventCode;

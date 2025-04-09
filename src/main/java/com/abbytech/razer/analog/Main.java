@@ -1,9 +1,9 @@
-package com.abbytech;
+package com.abbytech.razer.analog;
 
-import com.abbytech.protocol.Constants;
-import com.abbytech.hid.Keyboard;
-import com.abbytech.protocol.USB;
-import com.abbytech.virtual.ScrewDriversInputDevice;
+import com.abbytech.razer.analog.protocol.Constants;
+import com.abbytech.razer.analog.hid.Keyboard;
+import com.abbytech.razer.analog.protocol.USB;
+import com.abbytech.razer.analog.virtual.ScrewDriversInputDevice;
 import org.apache.commons.codec.DecoderException;
 import uk.co.bithatch.linuxio.EventCode;
 import uk.co.bithatch.linuxio.InputDevice;

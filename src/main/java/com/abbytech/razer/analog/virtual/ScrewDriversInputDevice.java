@@ -1,6 +1,6 @@
-package com.abbytech.virtual;
+package com.abbytech.razer.analog.virtual;
 
-import com.abbytech.util.Util;
+import com.abbytech.razer.analog.util.Util;
 import uk.co.bithatch.linuxio.EventCode;
 import uk.co.bithatch.linuxio.InputDevice;
 
@@ -143,8 +143,6 @@ public class ScrewDriversInputDevice {
 
         InputDevice.Event event1 = new InputDevice.Event(mappedEventCode, value);
         mappedEvents.add(event1);
-        System.out.println(event1);
-
         return mappedEvents;
     }
 

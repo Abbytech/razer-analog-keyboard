@@ -1,6 +1,6 @@
-package com.abbytech.hid;
+package com.abbytech.razer.analog.hid;
 
-import com.abbytech.protocol.USB;
+import com.abbytech.razer.analog.protocol.USB;
 import org.apache.commons.codec.DecoderException;
 import uk.co.bithatch.linuxio.EventCode;
 import uk.co.bithatch.linuxio.InputDevice;

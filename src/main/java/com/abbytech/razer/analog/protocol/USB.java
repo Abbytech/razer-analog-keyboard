@@ -1,4 +1,4 @@
-package com.abbytech.protocol;
+package com.abbytech.razer.analog.protocol;
 
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
@@ -10,7 +10,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-import static com.abbytech.protocol.Constants.*;
+import static com.abbytech.razer.analog.protocol.Constants.*;
 
 public class USB {
     private final Thread hook = new Thread(this::shutdown);

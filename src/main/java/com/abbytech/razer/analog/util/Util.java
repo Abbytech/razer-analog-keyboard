@@ -1,4 +1,4 @@
-package com.abbytech.util;
+package com.abbytech.razer.analog.util;
 
 public class Util {
     public static final int halfwayDown = Short.MAX_VALUE;//half-way
