@@ -1,6 +1,5 @@
 package com.abbytech.hid;
 
-import com.abbytech.common.CompositeEvent;
 import org.apache.commons.codec.binary.Hex;
 import uk.co.bithatch.linuxio.EventCode;
 import uk.co.bithatch.linuxio.InputDevice;
@@ -83,19 +82,19 @@ class HIDDecoder {
         keyCodeMap.put("5b", EventCode.KEY_KP7);
         keyCodeMap.put("5c", EventCode.KEY_KP4);
         keyCodeMap.put("5d", EventCode.KEY_KP1);
-        keyCodeMap.put("5f",EventCode.KEY_KPSLASH);
+        keyCodeMap.put("5f", EventCode.KEY_KPSLASH);
         keyCodeMap.put("60", EventCode.KEY_KP8);
         keyCodeMap.put("61", EventCode.KEY_KP5);
         keyCodeMap.put("62", EventCode.KEY_KP2);
         keyCodeMap.put("63", EventCode.KEY_KP0);
-        keyCodeMap.put("64",EventCode.KEY_KPASTERISK);
+        keyCodeMap.put("64", EventCode.KEY_KPASTERISK);
         keyCodeMap.put("65", EventCode.KEY_KP9);
         keyCodeMap.put("66", EventCode.KEY_KP6);
         keyCodeMap.put("67", EventCode.KEY_KP3);
         keyCodeMap.put("68", EventCode.KEY_KPDOT);
-        keyCodeMap.put("69",EventCode.KEY_MINUS);
-        keyCodeMap.put("6a",EventCode.KEY_KPPLUS);
-        keyCodeMap.put("6c",EventCode.KEY_KPENTER);
+        keyCodeMap.put("69", EventCode.KEY_MINUS);
+        keyCodeMap.put("6a", EventCode.KEY_KPPLUS);
+        keyCodeMap.put("6c", EventCode.KEY_KPENTER);
         keyCodeMap.put("6e", EventCode.KEY_ESC);
         //keypad/numpad end
 
@@ -128,7 +127,7 @@ class HIDDecoder {
         keyCodeMap.put("7f", EventCode.KEY_LEFTMETA);
         keyCodeMap.put("00", EventCode.KEY_RESERVED);
 
-        keyCodeMap.put("52",EventCode.KEY_MEDIA);
+        keyCodeMap.put("52", EventCode.KEY_MEDIA);
     }
 
     static Collection<EventCode> getCapabilities() {
@@ -148,9 +147,9 @@ class HIDDecoder {
         return hidPartList;
     }
 
-    public static CompositeEvent decode(ByteBuffer byteBuffer){
+    public static List<InputDevice.Event> decode(ByteBuffer byteBuffer) {
         String hidData = new String(Hex.encodeHex(byteBuffer));
-        List<InputDevice.Event> eventKeys = HIDDecoder.decode(hidData).stream().map(hidPart -> {
+        return HIDDecoder.decode(hidData).stream().map(hidPart -> {
                     String keyCode = hidPart.getKeyCode();
                     Integer value = hidPart.getValue();
                     EventCode eventCode = Optional.ofNullable(keyCodeMap.get(keyCode)).orElse(EventCode.KEY_RESERVED);
@@ -160,7 +159,6 @@ class HIDDecoder {
                     return new InputDevice.Event(eventCode, value);
                 }).filter(eventKey -> !(eventKey.getCode().equals(EventCode.KEY_RESERVED) && eventKey.getValue() == 0))
                 .collect(Collectors.toList());
-        return new CompositeEvent(eventKeys);
     }
 
     private static class HidPart {

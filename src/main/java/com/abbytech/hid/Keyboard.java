@@ -1,6 +1,5 @@
 package com.abbytech.hid;
 
-import com.abbytech.common.CompositeEvent;
 import com.abbytech.protocol.USB;
 import org.apache.commons.codec.DecoderException;
 import uk.co.bithatch.linuxio.EventCode;
@@ -12,24 +11,23 @@ import java.util.List;
 
 public class Keyboard {
     public interface EventListener {
-        void onEvent(CompositeEvent event);
+        void onEvent(List<InputDevice.Event> event);
     }
 
     public static void listen(EventListener listener) throws DecoderException {
         USB.openDevice();
         while (true) {
             ByteBuffer byteBuffer = USB.readHIDData();
-            CompositeEvent compositeEvent = HIDDecoder.decode(byteBuffer);
-            if (shouldTerminate(compositeEvent)) {
+            List<InputDevice.Event> events = HIDDecoder.decode(byteBuffer);
+            if (shouldTerminate(events)) {
                 break;
             } else {
-                listener.onEvent(compositeEvent);
+                listener.onEvent(events);
             }
         }
     }
 
-    private static boolean shouldTerminate(CompositeEvent compositeEvent) {
-        List<InputDevice.Event> events = compositeEvent.getEvents();
+    private static boolean shouldTerminate(List<InputDevice.Event> events) {
         if (events.size() == 2) {
             InputDevice.Event event = events.get(0);
             InputDevice.Event event1 = events.get(1);
@@ -47,7 +45,6 @@ public class Keyboard {
         }
         return false;
     }
-
 
     public static Collection<EventCode> getCapabilities() {
         return HIDDecoder.getCapabilities();

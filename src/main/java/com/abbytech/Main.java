@@ -1,9 +1,8 @@
 package com.abbytech;
 
-import com.abbytech.common.CompositeEvent;
 import com.abbytech.protocol.Constants;
 import com.abbytech.hid.Keyboard;
-import com.abbytech.virtual.MappingInputDevice;
+import com.abbytech.virtual.ScrewDriversInputDevice;
 import org.apache.commons.codec.DecoderException;
 import uk.co.bithatch.linuxio.EventCode;
 import uk.co.bithatch.linuxio.InputDevice;
@@ -15,7 +14,7 @@ import java.util.stream.Collectors;
 
 public class Main {
     private static InputDevice virtualKeyboard;
-    private static MappingInputDevice mappingInputDevice;
+    private static ScrewDriversInputDevice mappingInputDevice;
     private static boolean joystickEnabled = false;
 
     public static void main(String[] args) throws DecoderException, IOException {
@@ -26,25 +25,24 @@ public class Main {
         virtualKeyboard.open();
 
         InputDevice gamepad = new InputDevice("Razer WASD", (short) 0x1234, (short) 0x5678);
-        mappingInputDevice = new MappingInputDevice(gamepad);
+        mappingInputDevice = new ScrewDriversInputDevice(gamepad);
         Keyboard.listen(Main::handleEvent);
     }
 
-    public static void handleEvent(CompositeEvent compositeEvent) {
-        boolean handled = enableDisableJoystickKeyComboCheck(compositeEvent);
-        if (handled){
+    public static void handleEvent(List<InputDevice.Event> events) {
+        boolean handled = enableDisableJoystickKeyComboCheck(events);
+        if (handled) {
             return;
         }
-        List<InputDevice.Event> originalEvents = compositeEvent.getEvents();
 
-        if (joystickEnabled){
-            Map<Boolean, List<InputDevice.Event>> collect = originalEvents.stream().collect(Collectors.partitioningBy(o -> mappingInputDevice.canHandle(o.getCode())));
+        if (joystickEnabled) {
+            Map<Boolean, List<InputDevice.Event>> collect = events.stream().collect(Collectors.partitioningBy(o -> mappingInputDevice.canHandle(o.getCode())));
             List<InputDevice.Event> keyboardEvents = collect.get(Boolean.FALSE);
             List<InputDevice.Event> gamepadEvents = collect.get(Boolean.TRUE);
             mappingInputDevice.handle(gamepadEvents);
             keyboardHandle(keyboardEvents);
-        }else{
-            keyboardHandle(originalEvents);
+        } else {
+            keyboardHandle(events);
         }
     }
 
@@ -62,9 +60,8 @@ public class Main {
         });
     }
 
-    private static boolean enableDisableJoystickKeyComboCheck(CompositeEvent compositeEvent) {
+    private static boolean enableDisableJoystickKeyComboCheck(List<InputDevice.Event> events) {
         boolean handled = false;
-        List<InputDevice.Event> events = compositeEvent.getEvents();
         if (events.size() == 2) {
             InputDevice.Event event = events.get(0);
             InputDevice.Event event1 = events.get(1);
@@ -75,7 +72,7 @@ public class Main {
 
             if (eventCode.equals(EventCode.KEY_FN) && eventCode1.equals(EventCode.KEY_PAGEDOWN)) {
                 if (value > Short.MAX_VALUE && value1 > Short.MAX_VALUE) {
-                    if (joystickEnabled){
+                    if (joystickEnabled) {
                         joystickEnabled = false;
                         System.out.println("joystick disabled");
                     }
@@ -83,7 +80,7 @@ public class Main {
                 }
             } else if (eventCode.equals(EventCode.KEY_FN) && eventCode1.equals(EventCode.KEY_PAGEUP)) {
                 if (value > Short.MAX_VALUE && value1 > Short.MAX_VALUE) {
-                    if (!joystickEnabled){
+                    if (!joystickEnabled) {
                         joystickEnabled = true;
                         System.out.println("joystick enabled");
                     }
