@@ -63,7 +63,7 @@ public class USB {
         hidDataBuffer.clear();
         hidInterruptResult.clear();
         int result = LibUsb.interruptTransfer(deviceHandle, ENDPOINT_IN_ANALOG, hidDataBuffer, hidInterruptResult, 0);
-        checkResult(result, false);
+        checkResult(result, true);
         return hidDataBuffer;
     }
 
