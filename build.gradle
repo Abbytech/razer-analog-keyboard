@@ -17,8 +17,6 @@ jar {
 dependencies {
     testImplementation platform('org.junit:junit-bom:5.10.0')
     testImplementation 'org.junit.jupiter:junit-jupiter'
-    implementation 'commons-codec:commons-codec:1.18.0'
-    implementation("org.apache.commons:commons-lang3:3.0")
     implementation("org.usb4java:usb4java:1.3.0")
     implementation("uk.co.bithatch:linuxio4j:2.1")
 }

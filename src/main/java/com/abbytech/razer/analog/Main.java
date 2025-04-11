@@ -4,7 +4,6 @@ import com.abbytech.razer.analog.protocol.Constants;
 import com.abbytech.razer.analog.hid.Keyboard;
 import com.abbytech.razer.analog.protocol.USB;
 import com.abbytech.razer.analog.virtual.ScrewDriversInputDevice;
-import org.apache.commons.codec.DecoderException;
 import uk.co.bithatch.linuxio.EventCode;
 import uk.co.bithatch.linuxio.InputDevice;
 
@@ -19,7 +18,7 @@ public class Main {
     private static ScrewDriversInputDevice mappingInputDevice;
     private static boolean joystickEnabled = false;
 
-    public static void main(String[] args) throws DecoderException, IOException {
+    public static void main(String[] args) throws IOException {
         Runtime.getRuntime().addShutdownHook(new Thread(Main::shutdown));
         Keyboard keyboard = new Keyboard(new USB());
         virtualKeyboard = createVirtualKeyboard(keyboard);

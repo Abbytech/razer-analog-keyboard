@@ -1,7 +1,6 @@
 package com.abbytech.razer.analog.hid;
 
 import com.abbytech.razer.analog.protocol.USB;
-import org.apache.commons.codec.DecoderException;
 import uk.co.bithatch.linuxio.EventCode;
 import uk.co.bithatch.linuxio.InputDevice;
 
@@ -16,11 +15,11 @@ public class Keyboard {
         this.usb = usb;
     }
 
-    public void listen(EventListener listener) throws DecoderException {
+    public void listen(EventListener listener) {
         usb.openDevice();
         while (true) {
             ByteBuffer byteBuffer = usb.readHIDData();
-            List<InputDevice.Event> events = HIDDecoder.decode(byteBuffer);
+            List<InputDevice.Event> events = HIDDecoder.toInputDeviceEvent(byteBuffer);
             if (shouldTerminate(events)) {
                 try {
                     usb.closeDevice();

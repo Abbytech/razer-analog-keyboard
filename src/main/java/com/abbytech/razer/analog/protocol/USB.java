@@ -1,7 +1,5 @@
 package com.abbytech.razer.analog.protocol;
 
-import org.apache.commons.codec.DecoderException;
-import org.apache.commons.codec.binary.Hex;
 import org.usb4java.*;
 
 import java.nio.ByteBuffer;
@@ -29,30 +27,35 @@ public class USB {
         if (result != LibUsb.SUCCESS) throw new LibUsbException("Unable to initialize libusb.", result);
     }
 
-    public void openDevice() throws DecoderException, LibUsbException {
+    public void openDevice() throws LibUsbException {
         if (deviceOpen) {
             throw new IllegalStateException("device already open");
         }
         Runtime.getRuntime().addShutdownHook(hook);
         Device device = findDevice(VENDOR_RAZER, HUNTSMAN_V3_PRO).get(0);
         deviceHandle = claimDevice(device);
-        sendCommand(deviceHandle, Constants.setDriverDeviceMode);
+        sendCommand(deviceHandle, setDriveDeviceMode);
         deviceOpen = true;
         System.out.println("device opened");
     }
 
-    public void closeDevice() throws DecoderException, LibUsbException {
+    public void closeDevice() throws LibUsbException {
         if (!deviceOpen) {
             throw new IllegalStateException("device not open");
         }
         if (!Thread.currentThread().equals(hook)) {
             Runtime.getRuntime().removeShutdownHook(hook);
         }
-        sendCommand(deviceHandle, Constants.setNormalDeviceMode);
+        System.out.println("closing device");
+        sendCommand(deviceHandle, setNormalDeviceMode);
         releaseDevice(deviceHandle);
+        deviceOpen = false;
     }
 
     public ByteBuffer readHIDData() {
+        if (!deviceOpen) {
+            throw new IllegalStateException("attempt to read closed device");
+        }
         hidDataBuffer.clear();
         hidInterruptResult.clear();
         int result = LibUsb.interruptTransfer(deviceHandle, ENDPOINT_IN_ANALOG, hidDataBuffer, hidInterruptResult, 0);
@@ -89,12 +92,13 @@ public class USB {
     }
 
     private void checkResult(int result, boolean shouldThrow) {
-        if (result != LibUsb.SUCCESS) {
+        if (result != LibUsb.SUCCESS && result != COMMAND_LENGTH) {
             if (shouldThrow) {
                 throw new LibUsbException(result);
             } else {
                 String error = LibUsb.strError(result);
                 Exception exception = new Exception(error);
+                System.err.printf("error code: %d", result);
                 exception.printStackTrace();
             }
         }
@@ -121,10 +125,9 @@ public class USB {
         return matchingDevices;
     }
 
-    public void sendCommand(DeviceHandle handle, String mode) throws DecoderException {
+    public void sendCommand(DeviceHandle handle, byte[] mode) {
         commandByteBuffer.clear();
-        byte[] setDeviceMode = Hex.decodeHex(mode);
-        commandByteBuffer.put(setDeviceMode);
+        commandByteBuffer.put(mode);
         int result = LibUsb.controlTransfer(handle, (byte) 0x21, (byte) 0x09, (short) 0x0300, (short) 0x0003, commandByteBuffer, 0);
         checkResult(result, false);
     }
@@ -144,7 +147,7 @@ public class USB {
 
     private void attachDriver(int interfaceNumber) {
         int result = LibUsb.attachKernelDriver(deviceHandle, interfaceNumber);
-        if (result != LibUsb.SUCCESS && result != LibUsb.ERROR_BUSY)
+        if (result != LibUsb.SUCCESS && result != LibUsb.ERROR_BUSY && result != LibUsb.ERROR_NOT_FOUND)
             throw new LibUsbException("Unable to re-attach kernel driver", result);
     }
 
