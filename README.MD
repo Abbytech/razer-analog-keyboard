@@ -7,9 +7,9 @@ Allows usage of razer-keyboard as a joystick/keyboard hybrid in analog mode (dri
 3. toggleable joystick/gamepad
 
 ## usage
-FN+PAGE_UP: enable joystick (disables regular keyboard output for the mapped keys)
-FN+PAGE_DOWN: disable joystick (keyboard functions as usual)
-FN+HOME key combo: closes application
+1. FN+PAGE_UP: enable joystick (disables regular keyboard output for the mapped keys)
+2. FN+PAGE_DOWN: disable joystick (keyboard functions as usual)
+3. FN+HOME key combo: closes application
 
 ### prerequisites
 add udev rules file /etc/udev/rules.d/\<filename-here>.rule <br/>
