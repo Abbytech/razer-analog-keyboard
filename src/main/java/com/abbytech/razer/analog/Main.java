@@ -1,5 +1,7 @@
 package com.abbytech.razer.analog;
 
+import com.abbytech.razer.analog.hid.HIDDecoder;
+import com.abbytech.razer.analog.layout.HuntsmanV3ProLayout;
 import com.abbytech.razer.analog.protocol.Constants;
 import com.abbytech.razer.analog.hid.Keyboard;
 import com.abbytech.razer.analog.protocol.USB;
@@ -13,6 +15,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static com.abbytech.razer.analog.protocol.Constants.HUNTSMAN_V3_PRO;
+
 public class Main {
     private static InputDevice virtualKeyboard;
     private static ScrewDriversInputDevice mappingInputDevice;
@@ -20,7 +24,7 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
         Runtime.getRuntime().addShutdownHook(new Thread(Main::shutdown));
-        Keyboard keyboard = new Keyboard(new USB());
+        Keyboard keyboard = new Keyboard(new USB(HUNTSMAN_V3_PRO), new HuntsmanV3ProLayout());
         virtualKeyboard = createVirtualKeyboard(keyboard);
         InputDevice gamepad = new InputDevice("Razer WASD", (short) 0x1234, (short) 0x5678);
         mappingInputDevice = new ScrewDriversInputDevice(gamepad);
@@ -43,7 +47,7 @@ public class Main {
     }
 
     private static InputDevice createVirtualKeyboard(Keyboard keyboard) throws IOException {
-        virtualKeyboard = new InputDevice("Razer Keyboard", Constants.VENDOR_RAZER, Constants.HUNTSMAN_V3_PRO);
+        virtualKeyboard = new InputDevice("Razer Keyboard", Constants.VENDOR_RAZER, HUNTSMAN_V3_PRO);
         virtualKeyboard.addCapability(keyboard.getCapabilities().toArray(new EventCode[0]));
         virtualKeyboard.open();
         return virtualKeyboard;
@@ -65,7 +69,7 @@ public class Main {
 
     private static Optional<InputDevice> getActualKeyboard() throws IOException {
         List<InputDevice> devices = InputDevice.getAllKeyboardDevices().stream()
-                .filter(inputDevice -> inputDevice.getVendor() == Constants.VENDOR_RAZER && inputDevice.getProduct() == Constants.HUNTSMAN_V3_PRO)
+                .filter(inputDevice -> inputDevice.getVendor() == Constants.VENDOR_RAZER && inputDevice.getProduct() == HUNTSMAN_V3_PRO)
                 .filter(inputDevice -> {
                     System.out.println();
                     return /*inputDevice.getCapabilities(EventCode.Type.EV_KEY).contains(EventCode.KEY_FN) && */inputDevice.getCapabilities(EventCode.Type.EV_KEY).contains(EventCode.KEY_HOME);

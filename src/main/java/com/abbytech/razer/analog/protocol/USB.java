@@ -17,9 +17,13 @@ public class USB {
     private final ByteBuffer hidDataBuffer = ByteBuffer.allocateDirect(HID_DATA_LENGTH);
     private final IntBuffer hidInterruptResult = IntBuffer.allocate(1);
     private boolean deviceOpen = false;
-
+    private final short productId;
     static {
         init();
+    }
+
+    public USB(short productId) {
+        this.productId = productId;
     }
 
     private static void init() {
@@ -32,7 +36,7 @@ public class USB {
             throw new IllegalStateException("device already open");
         }
         Runtime.getRuntime().addShutdownHook(hook);
-        Device device = findDevice(VENDOR_RAZER, HUNTSMAN_V3_PRO).get(0);
+        Device device = findDevice(VENDOR_RAZER, productId);
         deviceHandle = claimDevice(device);
         sendCommand(deviceHandle, setDriveDeviceMode);
         deviceOpen = true;
@@ -104,7 +108,7 @@ public class USB {
         }
     }
 
-    private List<Device> findDevice(short vendorId, short productId) {
+    private Device findDevice(short vendorId, short productId) {
         // Read the USB device list
         DeviceList list = new DeviceList();
         int result = LibUsb.getDeviceList(null, list);
@@ -120,9 +124,9 @@ public class USB {
 
         LibUsb.freeDeviceList(list, true);
         if (matchingDevices.size() > 1) {
-            System.out.println("how?");
+            System.out.println("found more than one device; defaulting to first one found");
         }
-        return matchingDevices;
+        return matchingDevices.getFirst();
     }
 
     public void sendCommand(DeviceHandle handle, byte[] mode) {

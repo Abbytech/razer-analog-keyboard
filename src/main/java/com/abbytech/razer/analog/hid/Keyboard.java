@@ -1,5 +1,6 @@
 package com.abbytech.razer.analog.hid;
 
+import com.abbytech.razer.analog.layout.Layout;
 import com.abbytech.razer.analog.protocol.USB;
 import uk.co.bithatch.linuxio.EventCode;
 import uk.co.bithatch.linuxio.InputDevice;
@@ -10,16 +11,20 @@ import java.util.List;
 
 public class Keyboard {
     private final USB usb;
+    private final HIDDecoder decoder;
+    private final Layout layout;
 
-    public Keyboard(USB usb) {
+    public Keyboard(USB usb, Layout layout) {
         this.usb = usb;
+        this.layout = layout;
+        this.decoder = new HIDDecoder(layout);
     }
 
     public void listen(EventListener listener) {
         usb.openDevice();
         while (true) {
             ByteBuffer byteBuffer = usb.readHIDData();
-            List<InputDevice.Event> events = HIDDecoder.toInputDeviceEvent(byteBuffer);
+            List<InputDevice.Event> events = decoder.toInputDeviceEvent(byteBuffer);
             if (shouldTerminate(events)) {
                 try {
                     usb.closeDevice();
@@ -53,7 +58,7 @@ public class Keyboard {
     }
 
     public Collection<EventCode> getCapabilities() {
-        return HIDDecoder.getCapabilities();
+        return layout.getCapabilities();
     }
 
     public interface EventListener {
