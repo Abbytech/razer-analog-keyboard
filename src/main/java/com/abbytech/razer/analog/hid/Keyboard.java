@@ -25,17 +25,31 @@ public class Keyboard {
     public void listen(EventListener listener) {
         usb.openDevice();
         while (true) {
-            ByteBuffer byteBuffer = usb.readHIDData();
+            ByteBuffer byteBuffer;
+            synchronized (usb) {
+                if (usb.isDeviceOpen())
+                    byteBuffer = usb.readHIDData();
+                else
+                    break;
+            }
             List<InputDevice.Event> events = decoder.toInputDeviceEvent(byteBuffer);
             if (shouldTerminate(events)) {
+                closeIfOpen();
+                break;
+            } else {
+                listener.onEvent(events);
+            }
+        }
+    }
+
+    public void closeIfOpen() {
+        synchronized (usb) {
+            if (usb.isDeviceOpen()){
                 try {
                     usb.closeDevice();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-                break;
-            } else {
-                listener.onEvent(events);
             }
         }
     }

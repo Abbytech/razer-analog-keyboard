@@ -23,22 +23,34 @@ public class Main {
     private static InputDevice virtualKeyboard;
     private static GenericDevice mappingInputDevice;
     private static boolean joystickEnabled = false;
+    private static final Object deviceLock = new Object();
+    private static Keyboard keyboard;
 
     public static void main(String[] args) throws IOException {
         if (args.length != 1) {
             System.out.println("usage: java -jar <jar-name.jar> <device-config-file-path>");
+            return;
         }
         String outputDeviceConfigJsonFile = args[0];
         File file = new File(outputDeviceConfigJsonFile);
         InputDeviceConfig inputDeviceConfig = new ObjectMapper().readValue(file, InputDeviceConfig.class);
 
         Runtime.getRuntime().addShutdownHook(new Thread(Main::shutdown));
-        Keyboard keyboard = new Keyboard(new USB(HUNTSMAN_V3_PRO), new HuntsmanV3ProLayout());
+
+        keyboard = new Keyboard(new USB(HUNTSMAN_V3_PRO), new HuntsmanV3ProLayout());
         virtualKeyboard = createVirtualKeyboard(keyboard);
         InputDevice gamepad = new InputDevice(inputDeviceConfig.getDeviceName(), inputDeviceConfig.getVendorId(), inputDeviceConfig.getProductId());
         mappingInputDevice = new ConfigurableInputDevice(gamepad, inputDeviceConfig.getInputOutputMapping(), inputDeviceConfig.getDefaultActuationPoint());
-        keyboard.listen(Main::handleEvent);
-        virtualKeyboard.close();
+        keyboard.listen(events -> {
+            synchronized (deviceLock) {
+                if (virtualKeyboard.isOpen())
+                    handleEvent(events);
+            }
+        });
+        synchronized (deviceLock) {
+            if (virtualKeyboard.isOpen())
+                virtualKeyboard.close();
+        }
     }
 
     private static InputDevice createVirtualKeyboard(Keyboard keyboard) throws IOException {
@@ -120,10 +132,13 @@ public class Main {
 
     private static void shutdown() {
         try {
-            if (mappingInputDevice.isOpen())
-                mappingInputDevice.close();
-            if (virtualKeyboard.isOpen())
-                virtualKeyboard.close();
+            synchronized (deviceLock) {
+                if (keyboard != null) keyboard.closeIfOpen();
+                if (mappingInputDevice != null && mappingInputDevice.isOpen())
+                    mappingInputDevice.close();
+                if (virtualKeyboard != null && virtualKeyboard.isOpen())
+                    virtualKeyboard.close();
+            }
         } catch (Exception e) {
             //ignored
             e.printStackTrace();

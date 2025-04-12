@@ -51,13 +51,13 @@
     "KEY_UP": [
       {
         "eventCode": "ABS_RY",
-        "positive": true
+        "positive": false
       }
     ],
     "KEY_DOWN": [
       {
         "eventCode": "ABS_RY",
-        "positive": false
+        "positive": true
       }
     ],
     "KEY_Q": [
@@ -76,6 +76,16 @@
       }
     ],
     "KEY_ESC": [
+      {
+        "eventCode": "BTN_X"
+      }
+    ],
+    "KEY_F": [
+      {
+        "eventCode": "BTN_Y"
+      }
+    ],
+    "KEY_G": [
       {
         "eventCode": "BTN_B"
       }

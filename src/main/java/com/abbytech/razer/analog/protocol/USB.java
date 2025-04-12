@@ -1,5 +1,6 @@
 package com.abbytech.razer.analog.protocol;
 
+import lombok.Getter;
 import org.usb4java.*;
 
 import java.nio.ByteBuffer;
@@ -11,11 +12,11 @@ import java.util.stream.StreamSupport;
 import static com.abbytech.razer.analog.protocol.Constants.*;
 
 public class USB {
-    private final Thread hook = new Thread(this::shutdown);
     private DeviceHandle deviceHandle;
     private final ByteBuffer commandByteBuffer = ByteBuffer.allocateDirect(COMMAND_LENGTH);
     private final ByteBuffer hidDataBuffer = ByteBuffer.allocateDirect(HID_DATA_LENGTH);
     private final IntBuffer hidInterruptResult = IntBuffer.allocate(1);
+    @Getter
     private boolean deviceOpen = false;
     private final short productId;
     static {
@@ -35,7 +36,6 @@ public class USB {
         if (deviceOpen) {
             throw new IllegalStateException("device already open");
         }
-        Runtime.getRuntime().addShutdownHook(hook);
         Device device = findDevice(VENDOR_RAZER, productId);
         deviceHandle = claimDevice(device);
         sendCommand(deviceHandle, setDriveDeviceMode);
@@ -46,9 +46,6 @@ public class USB {
     public void closeDevice() throws LibUsbException {
         if (!deviceOpen) {
             throw new IllegalStateException("device not open");
-        }
-        if (!Thread.currentThread().equals(hook)) {
-            Runtime.getRuntime().removeShutdownHook(hook);
         }
         System.out.println("closing device");
         sendCommand(deviceHandle, setNormalDeviceMode);
@@ -153,14 +150,5 @@ public class USB {
         int result = LibUsb.attachKernelDriver(deviceHandle, interfaceNumber);
         if (result != LibUsb.SUCCESS && result != LibUsb.ERROR_BUSY && result != LibUsb.ERROR_NOT_FOUND)
             throw new LibUsbException("Unable to re-attach kernel driver", result);
-    }
-
-    private void shutdown() {
-        try {
-            closeDevice();
-        } catch (Exception e) {
-            //ignored
-            e.printStackTrace();
-        }
     }
 }
