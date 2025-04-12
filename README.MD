@@ -18,7 +18,7 @@ HuntsmanV3Pro: `SUBSYSTEM=="usb",ATTR{idVendor}=="1532",ATTR{idProduct}=="02a6",
     
     ./java -jar ./build/libs/<jar-name>-all.jar <device-config-file-path>
 
-where <device-config-file-path> is the path to the keyboard->gamepad/joystick mapping json file. (included example: testDeviceConfig.json)
+where device-config-file-path is the path to the keyboard->gamepad/joystick mapping json file. (included example: testDeviceConfig.json)
 
 ### Usage
 1. FN+PAGE_UP: enable joystick (disables regular keyboard output for the mapped keys)
