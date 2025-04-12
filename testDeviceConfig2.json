@@ -1,0 +1,106 @@
+{
+  "deviceName": "Razer WASD 2",
+  "vendorId": 1234,
+  "productId": 5679,
+  "defaultActuationPoint": 32767,
+  "inputOutputMapping": {
+    "KEY_W": [
+      {
+        "eventCode": "ABS_Y",
+        "positive": false
+      }
+    ],
+    "KEY_S": [
+      {
+        "eventCode": "ABS_Y",
+        "positive": true
+      }
+    ],
+    "KEY_A": [
+      {
+        "eventCode": "ABS_X",
+        "positive": false
+      }
+    ],
+    "KEY_D": [
+      {
+        "eventCode": "ABS_X",
+        "positive": true
+      }
+    ],
+    "KEY_LEFT": [
+      {
+        "eventCode": "ABS_RX",
+        "positive": false
+      }
+    ],
+    "KEY_RIGHT": [
+      {
+        "eventCode": "ABS_RX",
+        "positive": true
+      }
+    ],
+    "KEY_UP": [
+      {
+        "eventCode": "ABS_RY",
+        "positive": false
+      }
+    ],
+    "KEY_DOWN": [
+      {
+        "eventCode": "ABS_RY",
+        "positive": true
+      }
+    ],
+    "KEY_Q": [
+      {
+        "eventCode": "BTN_TL"
+      }
+    ],
+    "KEY_1": [
+      {
+        "eventCode": "BTN_TL2"
+      }
+    ],
+    "KEY_E": [
+      {
+        "eventCode": "BTN_TR"
+      }
+    ],
+    "KEY_3": [
+      {
+        "eventCode": "BTN_TR2"
+      }
+    ],
+    "KEY_KP2": [
+      {
+        "eventCode": "BTN_A"
+      }
+    ],
+    "KEY_KP8": [
+      {
+        "eventCode": "BTN_X"
+      }
+    ],
+    "KEY_KP4": [
+      {
+        "eventCode": "BTN_Y"
+      }
+    ],
+    "KEY_KP6": [
+      {
+        "eventCode": "BTN_B"
+      }
+    ],
+    "KEY_ENTER": [
+      {
+        "eventCode": "BTN_START"
+      }
+    ],
+    "KEY_F": [
+      {
+        "eventCode": "BTN_SELECT"
+      }
+    ]
+  }
+}
