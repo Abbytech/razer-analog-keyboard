@@ -15,6 +15,7 @@ public class Constants {
     public static final int HID_DATA_LENGTH_DIGITAL = 8;
     public static final int HID_DATA_LENGTH = 48;
     public static final byte hidStartByte = 0x0b;
+    public static final byte hidStartByteMedia = 0x04;
 
     public static int MAX_X_AXIS_VALUE = 65535;
     public static int MIN_X_AXIS_VALUE = 0;

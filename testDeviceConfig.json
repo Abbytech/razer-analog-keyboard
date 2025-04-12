@@ -1,0 +1,84 @@
+{
+  "deviceName": "Razer WASD",
+  "vendorId": 1234,
+  "productId": 5678,
+  "defaultActuationPoint": 32767,
+  "inputOutputMapping": {
+    "KEY_W": [
+      {
+        "eventCode": "ABS_RZ",
+        "positive": true
+      },
+      {
+        "eventCode": "BTN_TR2",
+        "actuationPoint": 60000
+      }
+    ],
+    "KEY_S": [
+      {
+        "eventCode": "ABS_Z",
+        "positive": true
+      },
+      {
+        "eventCode": "BTN_TL2",
+        "actuationPoint": 60000
+      }
+    ],
+    "KEY_A": [
+      {
+        "eventCode": "ABS_X",
+        "positive": false
+      }
+    ],
+    "KEY_D": [
+      {
+        "eventCode": "ABS_X",
+        "positive": true
+      }
+    ],
+    "KEY_LEFT": [
+      {
+        "eventCode": "ABS_RX",
+        "positive": false
+      }
+    ],
+    "KEY_RIGHT": [
+      {
+        "eventCode": "ABS_RX",
+        "positive": true
+      }
+    ],
+    "KEY_UP": [
+      {
+        "eventCode": "ABS_RY",
+        "positive": true
+      }
+    ],
+    "KEY_DOWN": [
+      {
+        "eventCode": "ABS_RY",
+        "positive": false
+      }
+    ],
+    "KEY_Q": [
+      {
+        "eventCode": "BTN_TL"
+      }
+    ],
+    "KEY_E": [
+      {
+        "eventCode": "BTN_TR"
+      }
+    ],
+    "KEY_ENTER": [
+      {
+        "eventCode": "BTN_A"
+      }
+    ],
+    "KEY_ESC": [
+      {
+        "eventCode": "BTN_B"
+      }
+    ]
+  }
+}

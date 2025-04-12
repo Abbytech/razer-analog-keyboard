@@ -9,6 +9,8 @@ import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.List;
 
+import static com.abbytech.razer.analog.util.Util.halfwayDown;
+
 public class Keyboard {
     private final USB usb;
     private final HIDDecoder decoder;
@@ -48,7 +50,7 @@ public class Keyboard {
             int value1 = event1.getValue();
 
             if (eventCode.equals(EventCode.KEY_FN) && eventCode1.equals(EventCode.KEY_HOME)) {
-                if (value > Short.MAX_VALUE && value1 > Short.MAX_VALUE) {
+                if (value > halfwayDown && value1 > halfwayDown) {
                     System.out.println("terminating");
                     return true;
                 }

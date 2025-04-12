@@ -1,7 +1,7 @@
 package com.abbytech.razer.analog.util;
 
 public class Util {
-    public static final int halfwayDown = Short.MAX_VALUE;//half-way
+    public static final int halfwayDown = 32767;//half-way
     private static final int quarterDown = 16383;
     private static final int calibratedValue = 8000;
 

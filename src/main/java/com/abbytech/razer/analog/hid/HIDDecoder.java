@@ -35,7 +35,10 @@ public class HIDDecoder {
 
     private static List<HidPart> decode(ByteBuffer byteBuffer) {
         byte b = byteBuffer.get();
-        if (b != Constants.hidStartByte) {
+        if (b == Constants.hidStartByteMedia) {
+            System.out.println("media keys not implemented yet");
+            return Collections.emptyList();
+        } else if (b != Constants.hidStartByte) {
             System.err.printf("unexpected start byte %d%n", b);
             return Collections.emptyList();
         }

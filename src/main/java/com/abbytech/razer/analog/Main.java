@@ -1,49 +1,44 @@
 package com.abbytech.razer.analog;
 
-import com.abbytech.razer.analog.hid.HIDDecoder;
+import com.abbytech.razer.analog.config.InputDeviceConfig;
 import com.abbytech.razer.analog.layout.HuntsmanV3ProLayout;
 import com.abbytech.razer.analog.protocol.Constants;
 import com.abbytech.razer.analog.hid.Keyboard;
 import com.abbytech.razer.analog.protocol.USB;
-import com.abbytech.razer.analog.virtual.ScrewDriversInputDevice;
+import com.abbytech.razer.analog.virtual.ConfigurableInputDevice;
+import com.abbytech.razer.analog.virtual.GenericDevice;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import uk.co.bithatch.linuxio.EventCode;
 import uk.co.bithatch.linuxio.InputDevice;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.abbytech.razer.analog.protocol.Constants.HUNTSMAN_V3_PRO;
 
 public class Main {
     private static InputDevice virtualKeyboard;
-    private static ScrewDriversInputDevice mappingInputDevice;
+    private static GenericDevice mappingInputDevice;
     private static boolean joystickEnabled = false;
 
     public static void main(String[] args) throws IOException {
+        if (args.length != 1) {
+            System.out.println("usage: java -jar <jar-name.jar> <device-config-file-path>");
+        }
+        String outputDeviceConfigJsonFile = args[0];
+        File file = new File(outputDeviceConfigJsonFile);
+        InputDeviceConfig inputDeviceConfig = new ObjectMapper().readValue(file, InputDeviceConfig.class);
+
         Runtime.getRuntime().addShutdownHook(new Thread(Main::shutdown));
         Keyboard keyboard = new Keyboard(new USB(HUNTSMAN_V3_PRO), new HuntsmanV3ProLayout());
         virtualKeyboard = createVirtualKeyboard(keyboard);
-        InputDevice gamepad = new InputDevice("Razer WASD", (short) 0x1234, (short) 0x5678);
-        mappingInputDevice = new ScrewDriversInputDevice(gamepad);
+        InputDevice gamepad = new InputDevice(inputDeviceConfig.getDeviceName(), inputDeviceConfig.getVendorId(), inputDeviceConfig.getProductId());
+        mappingInputDevice = new ConfigurableInputDevice(gamepad, inputDeviceConfig.getInputOutputMapping(), inputDeviceConfig.getDefaultActuationPoint());
         keyboard.listen(Main::handleEvent);
         virtualKeyboard.close();
-    }
-
-    private static boolean findPhysicalKeyboardAndWaitForEnableCombo(Keyboard keyboard) throws IOException {
-        Optional<InputDevice> inputDevice = getActualKeyboard();
-        if (inputDevice.isPresent()) {
-            InputDevice actualKeyboard = inputDevice.get();
-            actualKeyboard.open();
-            waitForEnableCombo(actualKeyboard);
-            virtualKeyboard = createVirtualKeyboard(keyboard);
-        } else {
-            System.err.println("original keyboard not found; exiting...");
-            return true;
-        }
-        return false;
     }
 
     private static InputDevice createVirtualKeyboard(Keyboard keyboard) throws IOException {
@@ -53,39 +48,6 @@ public class Main {
         return virtualKeyboard;
     }
 
-    private static void waitForEnableCombo(InputDevice actualKeyboard) throws IOException {
-        System.out.println("waiting for enable command");
-        while (true) {
-            InputDevice.Event event = actualKeyboard.nextEvent();
-            if (event.getCode().equals(EventCode.KEY_FN) && event.getValue() == 1) {
-                InputDevice.Event event2 = actualKeyboard.nextEvent();
-                if (event2.getCode().equals(EventCode.KEY_HOME) && event.getValue() == 1) {
-                    System.out.println("got enable command");
-                    break;
-                }
-            }
-        }
-    }
-
-    private static Optional<InputDevice> getActualKeyboard() throws IOException {
-        List<InputDevice> devices = InputDevice.getAllKeyboardDevices().stream()
-                .filter(inputDevice -> inputDevice.getVendor() == Constants.VENDOR_RAZER && inputDevice.getProduct() == HUNTSMAN_V3_PRO)
-                .filter(inputDevice -> {
-                    System.out.println();
-                    return /*inputDevice.getCapabilities(EventCode.Type.EV_KEY).contains(EventCode.KEY_FN) && */inputDevice.getCapabilities(EventCode.Type.EV_KEY).contains(EventCode.KEY_HOME);
-                })
-                .collect(Collectors.toList());
-
-        if (devices.isEmpty()) {
-            return Optional.empty();
-        } else {
-            if (devices.size() > 1) {
-                System.err.println("found more than one physical keyboard" + devices);
-            }
-            return Optional.of(devices.get(1));
-        }
-    }
-
     public static void handleEvent(List<InputDevice.Event> events) {
         boolean handled = enableDisableJoystickKeyComboCheck(events);
         if (handled) {
@@ -93,6 +55,14 @@ public class Main {
         }
 
         if (joystickEnabled) {
+            if (!mappingInputDevice.isOpen()) {
+                try {
+                    mappingInputDevice.open();
+                    System.out.println("mapping input device opened");
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
             Map<Boolean, List<InputDevice.Event>> collect = events.stream().collect(Collectors.partitioningBy(o -> mappingInputDevice.canHandle(o.getCode())));
             List<InputDevice.Event> keyboardEvents = collect.get(Boolean.FALSE);
             List<InputDevice.Event> gamepadEvents = collect.get(Boolean.TRUE);
