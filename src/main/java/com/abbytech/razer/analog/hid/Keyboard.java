@@ -23,7 +23,9 @@ public class Keyboard {
     }
 
     public void listen(EventListener listener) {
-        usb.openDevice();
+        synchronized (usb){
+            usb.openDevice();
+        }
         while (true) {
             ByteBuffer byteBuffer;
             synchronized (usb) {
@@ -44,7 +46,7 @@ public class Keyboard {
 
     public void closeIfOpen() {
         synchronized (usb) {
-            if (usb.isDeviceOpen()){
+            if (usb.isDeviceOpen()) {
                 try {
                     usb.closeDevice();
                 } catch (Exception e) {
