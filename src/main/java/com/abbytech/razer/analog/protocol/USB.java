@@ -38,7 +38,7 @@ public class USB {
         }
         Device device = findDevice(VENDOR_RAZER, productId);
         deviceHandle = claimDevice(device);
-        sendCommand(deviceHandle, setDriveDeviceMode);
+        sendCommand(deviceHandle, setDriverDeviceMode);
         deviceOpen = true;
         System.out.println("device opened");
     }
